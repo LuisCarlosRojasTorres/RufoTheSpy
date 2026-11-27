@@ -138,18 +138,23 @@ def parse_metrics(top_output, memory_output, thread_output=None):
 
 
 class ConfirmHostKeyPolicy(paramiko.MissingHostKeyPolicy):
-    def __init__(self, known_hosts_path):
+    def __init__(self, known_hosts_path, auto_accept=False):
         self.known_hosts_path = known_hosts_path
+        self.auto_accept = auto_accept
 
     def missing_host_key(self, client, hostname, key):
         fingerprint = base64.b64encode(hashlib.sha256(key.asbytes()).digest()).decode("ascii").rstrip("=")
         print(f"Chave SSH desconhecida para {hostname} ({key.get_name()}).")
         print(f"Impressão digital: SHA256:{fingerprint}")
-        print("Confirme a impressão digital por um canal confiável antes de aceitar.")
-        try:
-            answer = input("Confiar nesta chave e salvá-la em known_hosts? Digite sim: ")
-        except EOFError as error:
-            raise paramiko.SSHException("Confirmação da chave SSH indisponível.") from error
+        if self.auto_accept:
+            print("Aceitando automaticamente a chave para esta execução do Rufo Monitor.")
+            answer = "sim"
+        else:
+            print("Confirme a impressão digital por um canal confiável antes de aceitar.")
+            try:
+                answer = input("Confiar nesta chave e salvá-la em known_hosts? Digite sim: ")
+            except EOFError as error:
+                raise paramiko.SSHException("Confirmação da chave SSH indisponível.") from error
         if answer.strip().lower() != "sim":
             raise paramiko.SSHException(f"Chave SSH de {hostname} não foi aceita.")
 

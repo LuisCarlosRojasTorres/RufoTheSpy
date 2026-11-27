@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 import tempfile
 import time
 import unittest
@@ -8,6 +9,9 @@ from unittest.mock import patch
 
 import dataCollector
 import main
+import sshConnector
+from rufo_monitor import ConfirmHostKeyPolicy
+from sshConnector import reset_known_hosts
 from dataStorage import SessionStorage
 
 
@@ -101,6 +105,165 @@ class StorageTests(unittest.TestCase):
                 rows = list(csv.DictReader(stream))
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["custom_process_cpu"], "6.0%")
+
+    def test_rufo_host_keys_reset_without_touching_global_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "rufo_known_hosts"
+            path.write_text("old key\n", encoding="utf-8")
+            reset_known_hosts(path)
+            self.assertEqual(path.read_text(encoding="utf-8"), "")
+
+    def test_host_key_policy_auto_accepts_without_prompt(self):
+        class FakeKey:
+            def asbytes(self):
+                return b"fake ssh key"
+
+            def get_name(self):
+                return "ssh-ed25519"
+
+            def get_base64(self):
+                return "ZmFrZS1zc2gta2V5"
+
+        class FakeHostKeys:
+            def add(self, hostname, key_type, key):
+                self.entry = (hostname, key_type, key)
+
+        class FakeClient:
+            def __init__(self):
+                self.host_keys = FakeHostKeys()
+
+            def get_host_keys(self):
+                return self.host_keys
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "rufo_known_hosts"
+            client = FakeClient()
+            policy = ConfirmHostKeyPolicy(path, auto_accept=True)
+            with patch("builtins.input", side_effect=AssertionError("unexpected prompt")):
+                policy.missing_host_key(client, "test-device", FakeKey())
+            self.assertIn("test-device ssh-ed25519", path.read_text(encoding="utf-8"))
+            self.assertEqual(client.host_keys.entry[0], "test-device")
+
+
+class SSHAuthenticationTests(unittest.TestCase):
+    class FakeSSHClient:
+        def load_host_keys(self, path):
+            pass
+
+        def set_missing_host_key_policy(self, policy):
+            self.policy = policy
+
+        def connect(self, **kwargs):
+            self.options = kwargs
+
+        def close(self):
+            pass
+
+    def test_config_accepts_each_authentication_mode(self):
+        config = main.load_config()
+        with tempfile.TemporaryDirectory() as directory:
+            config_path = Path(directory) / "config.json"
+            for password_required, key_required in (
+                (False, False),
+                (True, False),
+                (False, True),
+                (True, True),
+            ):
+                with self.subTest(
+                    password=password_required, key=key_required
+                ):
+                    config["Primary"]["isPasswordRequired"] = password_required
+                    config["Primary"]["isKeyRequired"] = key_required
+                    config["Primary"]["password"] = "secret" if password_required else ""
+                    config["Primary"]["privateKeyPath"] = (
+                        "private.pem" if key_required else ""
+                    )
+                    config_path.write_text(json.dumps(config), encoding="utf-8")
+                    main.load_config(config_path)
+
+    def test_connector_uses_only_configured_authentication(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            known_hosts_path = root / "known_hosts"
+            known_hosts_path.write_text("", encoding="utf-8")
+            key_path = root / "private.pem"
+            key_path.write_text("test key", encoding="utf-8")
+            config_path = root / "config.json"
+            fake_pkey = object()
+
+            modes = (
+                (
+                    {"isPasswordRequired": False, "isKeyRequired": False},
+                    {"allow_agent": True, "look_for_keys": True},
+                ),
+                (
+                    {
+                        "isPasswordRequired": True,
+                        "isKeyRequired": False,
+                        "password": "secret",
+                    },
+                    {
+                        "allow_agent": False,
+                        "look_for_keys": False,
+                        "password": "secret",
+                    },
+                ),
+                (
+                    {
+                        "isPasswordRequired": False,
+                        "isKeyRequired": True,
+                        "privateKeyPath": "private.pem",
+                    },
+                    {
+                        "allow_agent": False,
+                        "look_for_keys": False,
+                        "pkey": fake_pkey,
+                    },
+                ),
+                (
+                    {
+                        "isPasswordRequired": True,
+                        "isKeyRequired": True,
+                        "password": "secret",
+                        "privateKeyPath": "private.pem",
+                    },
+                    {
+                        "allow_agent": False,
+                        "look_for_keys": False,
+                        "password": "secret",
+                        "pkey": fake_pkey,
+                    },
+                ),
+            )
+            for auth_config, expected in modes:
+                device = {
+                    "ip": "192.0.2.1",
+                    "sshPort": 22,
+                    "sshUser": "tester",
+                    "password": "",
+                    "privateKeyPath": "",
+                    "isPasswordRequired": False,
+                    "isKeyRequired": False,
+                    **auth_config,
+                }
+                fake_client = self.FakeSSHClient()
+                with self.subTest(auth=auth_config):
+                    with patch.object(
+                        sshConnector, "KNOWN_HOSTS_PATH", known_hosts_path
+                    ), patch.object(
+                        sshConnector.paramiko, "SSHClient", return_value=fake_client
+                    ), patch.object(
+                        sshConnector.paramiko.PKey, "from_path", return_value=fake_pkey
+                    ) as load_key:
+                        sshConnector._connect_device("Primary", device, config_path)
+                if auth_config["isKeyRequired"]:
+                    load_key.assert_called_once_with(key_path)
+                for key, value in expected.items():
+                    self.assertEqual(fake_client.options[key], value)
+                if "password" not in expected:
+                    self.assertNotIn("password", fake_client.options)
+                if "pkey" not in expected:
+                    self.assertNotIn("pkey", fake_client.options)
 
 
 class DashboardTests(unittest.TestCase):

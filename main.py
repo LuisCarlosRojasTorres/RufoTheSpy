@@ -2,6 +2,7 @@
 
 import copy
 import json
+import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -44,11 +45,13 @@ def load_config(path=CONFIG_PATH):
         for key in ("isPasswordRequired", "isKeyRequired"):
             if not isinstance(device.get(key), bool):
                 raise ValueError(f"O campo {name}.{key} deve ser verdadeiro ou falso.")
-        if device["isPasswordRequired"] == device["isKeyRequired"]:
-            raise ValueError(f"Configure exatamente um método SSH para {name}.")
         for key in ("password", "privateKeyPath"):
             if not isinstance(device.get(key), str):
                 raise ValueError(f"O campo {name}.{key} deve ser um texto.")
+        if device["isPasswordRequired"] and not device["password"].strip():
+            raise ValueError(f"O campo {name}.password é obrigatório para autenticação por senha.")
+        if device["isKeyRequired"] and not device["privateKeyPath"].strip():
+            raise ValueError(f"O campo {name}.privateKeyPath é obrigatório para autenticação por chave.")
     commands = config.get("Commands")
     if not isinstance(commands, dict):
         raise ValueError("O campo Commands deve ser um objeto.")
@@ -293,5 +296,10 @@ app = create_app()
 
 
 if __name__ == "__main__":
+    try:
+        sshConnector.reset_known_hosts()
+    except OSError as error:
+        print(f"Não foi possível limpar o known_hosts do Rufo: {error}", file=sys.stderr)
+        raise SystemExit(1) from error
     print("Rufo Monitor disponível em http://127.0.0.1:2402")
     app.run(host="127.0.0.1", port=2402, threaded=True, use_reloader=False)
