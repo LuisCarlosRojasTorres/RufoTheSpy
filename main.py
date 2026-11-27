@@ -12,4 +12,5 @@ esta componente
 10. A cada "timerSeconds" os graficos vao ser atualizados com os novos dados
 11. A cada "timerSeconds" os labels vao ser atualizados com os novos dados
 12. Cuando chegar no tempo de "durationHours" a coleta de dados vai ser pausada e os graficos e labels vao parar de ser atualizados. Imagens vao ser salvas na pasta output com o nome do device conectado e a data e hora da coleta de dados, e os arquivos .csv vao ser salvos na pasta output com o nome do device conectado e a data e hora da coleta de dados.
+13. Para facilitar a manutenção tudo relacioado a amostar graficos e data vai ser implementadono dataPlotter.py, e tudo relacionado a coleta de dados vai ser implementado no dataCollector.py, e tudo relacionado a conexao ssh vai ser implementado no sshConnector.py, e tudo relacionado a armazenamento de dados vai ser implementado no dataStorage.py.
 '''
