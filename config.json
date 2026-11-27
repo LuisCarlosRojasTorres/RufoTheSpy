@@ -8,7 +8,7 @@
     "sshUser": "root",
     "isPasswordRequired": false,
     "password": "",
-    "isKeyRequired": false,
+    "isKeyRequired": true,
     "privateKeyPath": "../rufo"
   },
   "Secondary": {
@@ -18,7 +18,7 @@
     "sshUser": "root",
     "isPasswordRequired": false,
     "password": "",
-    "isKeyRequired": false,
+    "isKeyRequired": true,
     "privateKeyPath": "../rufo"
   },
   "Tertiary": {
@@ -28,16 +28,16 @@
     "sshUser": "root",
     "isPasswordRequired": false,
     "password": "",
-    "isKeyRequired": false,
+    "isKeyRequired": true,
     "privateKeyPath": "../rufo"
   },
   "Commands":{
-    "getTotalCPUComsumption": "",
-    "getProcessCPUConsumption": "",
-    "getMemoryConsumption": "",
-    "getDiskConsumption": "",
-    "getThreadsCount": "",
-    "getKThreadsCount": "",
-    "getProcessPID": ""
+    "getTotalCPUComsumption": "LC_ALL=C top -b -n1",
+    "getProcessCPUConsumption": "LC_ALL=C awk '/^cpu/ {print}' /proc/stat && cat /proc/[0-9]*/stat && sleep 1 && printf '\\n__RUFO_SECOND_SAMPLE__\\n' && LC_ALL=C awk '/^cpu/ {print}' /proc/stat && cat /proc/[0-9]*/stat",
+    "getMemoryConsumption": "LC_ALL=C free -m",
+    "getDiskConsumption": "LC_ALL=C df -P /",
+    "getThreadsCount": "LC_ALL=C ps -eLf | awk 'END {print NR - 1}'",
+    "getKThreadsCount": "LC_ALL=C awk '{sub(/^.*\\\\) /, \"\"); if (NF >= 18 && $7 ~ /^[0-9]+$/ && $18 ~ /^[0-9]+$/ && int($7 / 2097152) % 2 == 1) count += $18} END {printf \"%.0f\", count}' /proc/[0-9]*/stat",
+    "getProcessPID": "LC_ALL=C ps -eo pid=,comm= | awk -v process={customProcess} '$2 == process {print $1; exit}'"
   }
 }
