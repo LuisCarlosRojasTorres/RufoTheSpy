@@ -1,6 +1,5 @@
 '''
-Utiliza o SSH para conectar a um ou mais dispositivos, dependendo do número de dispositivos informados. O arquivo config.json deve estar presente e configurado corretamente para que a conexão seja estabelecida com sucesso.
-Uma vez con los devices que estiverem conectados vai executar as funções que chamam aos comandos do arquivo config.json:
+Uma vez que os devices estiverem conectados por ssh vai executar as funções que chamam aos comandos do arquivo config.json:
 - getTotalCPUComsumption
 - getProcessCPUConsumption
 - getMemoryConsumption
@@ -9,7 +8,9 @@ Uma vez con los devices que estiverem conectados vai executar as funções que c
 - getKThreadsCount
 - getProcessPID
 
-Todos esses comandos sao chamados para cada device a cada "timerSeconds" com uma duração total de "durationHours" horas
-Prencher os comandos do arquivo json baseado nos comandos utilizados no arquivo rufo_monitor.py
+
+Depois de cada chamada os dados são salvos utilizando as funções do módulo dataStorage.py num arquivo csv para cada device (seguindo o mesmo formato e convenção de nome que o arquivo rufo_monitor.py).
+
+Os campos dos comandos do arquivo json estao vazios. Prencher os comandos do arquivo config.json baseado nos comandos utilizados no arquivo rufo_monitor.py
 
 '''
