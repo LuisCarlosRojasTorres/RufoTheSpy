@@ -1,0 +1,14 @@
+{
+  "sshIpPrimary": "1.1.1.141",
+  "sshIpSecondary": "1.1.1.142",
+  "primaryPrivateKeyPath": "../rufo",
+  "secondaryPrivateKeyPath": "../rufo",
+  "primarySshPort": 22,
+  "secondarySshPort": 22,
+  "primarySshUser": "root",
+  "secondarySshUser": "root",
+  "timerPrimarySeconds": 5,
+  "timerSecondarySeconds": 5,
+  "primaryCustomProcess": "Zeit.HMI.App.Se",
+  "secondaryCustomProcess": "Zeit.HMI.App.Se"
+}
