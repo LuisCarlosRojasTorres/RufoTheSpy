@@ -14,7 +14,7 @@ from pathlib import Path
 import paramiko
 
 
-CONFIG_PATH = Path(__file__).with_name("RufoConfig.json")
+CONFIG_PATH = Path(__file__).with_name("config.json")
 CSV_DIRECTORY = Path(__file__).parent
 CSV_COLUMNS = ("index", "time", "cpu", "ram", "tasks", "thr", "kthr", "custom_process_cpu")
 CSV_PREFIXES = {"IHM primaria": "Primary", "IHM secundaria": "Secondary"}

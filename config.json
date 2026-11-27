@@ -1,14 +1,45 @@
 {
-  "sshIpPrimary": "1.1.1.141",
-  "sshIpSecondary": "1.1.1.142",
-  "primaryPrivateKeyPath": "../rufo",
-  "secondaryPrivateKeyPath": "../rufo",
-  "primarySshPort": 22,
-  "secondarySshPort": 22,
-  "primarySshUser": "root",
-  "secondarySshUser": "root",
-  "timerPrimarySeconds": 5,
-  "timerSecondarySeconds": 5,
-  "primaryCustomProcess": "Zeit.HMI.App.Se",
-  "secondaryCustomProcess": "Zeit.HMI.App.Se"
+  "Primary": {
+    "ip": "192.168.15.48",
+    "customProcess": "Zeit.HMI.App.Se",
+    "sshPort": 22,
+    "sshUser": "root",
+    "isPasswordRequired": false,
+    "password": "",
+    "isKeyRequired": false,
+    "privateKeyPath": "../rufo",
+    "timerSeconds": 5
+
+  },
+  "Secondary": {
+    "ip": "192.168.15.48",
+    "customProcess": "Zeit.HMI.App.Se",
+    "sshPort": 22,
+    "sshUser": "root",
+    "isPasswordRequired": false,
+    "password": "",
+    "isKeyRequired": false,
+    "privateKeyPath": "../rufo",
+    "timerSeconds": 5
+  },
+  "Tertiary": {
+    "ip": "192.168.15.48",
+    "customProcess": "Zeit.HMI.App.Se",
+    "sshPort": 22,
+    "sshUser": "root",
+    "isPasswordRequired": false,
+    "password": "",
+    "isKeyRequired": false,
+    "privateKeyPath": "../rufo",
+    "timerSeconds": 5
+  },
+  "Commands":{
+    "getTotalCPUComsumption": "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\([0-9.]*\)%* id.*/\1/' | awk '{print 100 - $1}'",
+    "getProcessCPUConsumption": "ps -p {pid} -o %cpu | tail -n 1",
+    "getMemoryConsumption": "free | grep Mem | awk '{print $3/$2 * 100.0}'",
+    "getDiskConsumption": "df -h | awk '$NF==\"/\"{print $5}'",
+    "getThreadsCount": "ps -p {pid} -L | wc -l",
+    "getKThreadsCount": "ps -p {pid} -L | grep 'kthreadd' | wc -l",
+    "getProcessPID": "pidof {processName}"
+  }
 }
