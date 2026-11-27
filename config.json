@@ -1,4 +1,6 @@
 {
+  "timerSeconds": 5,
+  "durationHours": 0.25,
   "Primary": {
     "ip": "192.168.15.48",
     "customProcess": "Zeit.HMI.App.Se",
@@ -7,10 +9,7 @@
     "isPasswordRequired": false,
     "password": "",
     "isKeyRequired": false,
-    "privateKeyPath": "../rufo",
-    "timerSeconds": 5,
-    "durationHours": 0.25
-
+    "privateKeyPath": "../rufo"
   },
   "Secondary": {
     "ip": "192.168.15.48",
@@ -20,9 +19,7 @@
     "isPasswordRequired": false,
     "password": "",
     "isKeyRequired": false,
-    "privateKeyPath": "../rufo",
-    "timerSeconds": 5,
-    "durationHours": 0.25
+    "privateKeyPath": "../rufo"
   },
   "Tertiary": {
     "ip": "192.168.15.48",
@@ -32,17 +29,15 @@
     "isPasswordRequired": false,
     "password": "",
     "isKeyRequired": false,
-    "privateKeyPath": "../rufo",
-    "timerSeconds": 5,
-    "durationHours": 0.25
+    "privateKeyPath": "../rufo"
   },
   "Commands":{
-    "getTotalCPUComsumption": "top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\([0-9.]*\)%* id.*/\1/' | awk '{print 100 - $1}'",
-    "getProcessCPUConsumption": "ps -p {pid} -o %cpu | tail -n 1",
-    "getMemoryConsumption": "free | grep Mem | awk '{print $3/$2 * 100.0}'",
-    "getDiskConsumption": "df -h | awk '$NF==\"/\"{print $5}'",
-    "getThreadsCount": "ps -p {pid} -L | wc -l",
-    "getKThreadsCount": "ps -p {pid} -L | grep 'kthreadd' | wc -l",
-    "getProcessPID": "pidof {processName}"
+    "getTotalCPUComsumption": "",
+    "getProcessCPUConsumption": "",
+    "getMemoryConsumption": "",
+    "getDiskConsumption": "",
+    "getThreadsCount": "",
+    "getKThreadsCount": "",
+    "getProcessPID": ""
   }
 }
